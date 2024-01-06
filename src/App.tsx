@@ -16,6 +16,7 @@ interface UserDetails {
 
 function App() {
   const [users, setUsers] = useState<UserDetails[]>([]);
+  const headerStyle = 'font-bold text-gray-600 flex-1';
 
   useEffect(() => {
     fetch('https://dummyjson.com/users')
@@ -35,13 +36,11 @@ function App() {
       <div className="bg-gray-100 p-8">
         <div className="mb-4">
           <div className="hidden lg:flex mb-4 px-2 py-5 bg-gray-200 rounded-t-lg text-center">
-            <span className="font-bold text-gray-600 flex-1">Name</span>
-            <span className="font-bold text-gray-600 flex-1">Email</span>
-            <span className="font-bold text-gray-600 flex-1">
-              Date of Birth
-            </span>
-            <span className="font-bold text-gray-600 flex-1">Gender</span>
-            <span className="font-bold text-gray-600 flex-1">State</span>
+            <span className={headerStyle}>Name</span>
+            <span className={headerStyle}>Email</span>
+            <span className={headerStyle}>Date of Birth</span>
+            <span className={headerStyle}>Gender</span>
+            <span className={headerStyle}>State</span>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-4">
