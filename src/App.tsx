@@ -22,6 +22,7 @@ function App() {
   const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [isUpdatingUser, setIsUpdatingUser] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState('');
   const headerStyle = 'font-bold text-gray-600 flex-1';
   const inputLabelStyle = 'block mb-2 font-semibold text-gray-600';
   const inputFieldStyle =
@@ -49,11 +50,16 @@ function App() {
       address: { state: 'AZ' },
       image: 'https://robohash.org/hicveldicta.png?size=50x50&set=set1',
     };
-    setUsers((prevUsers) => [...prevUsers, newUser]);
+    setActionSuccess('User added successfully!');
+    setTimeout(() => setActionSuccess(''), 5000);
+    setUsers((prevUsers) => [newUser, ...prevUsers]);
   };
 
   const deleteUser = (userId: number) => {
     setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+    setActionSuccess('User deleted successfully!');
+    setTimeout(() => setActionSuccess(''), 5000);
+    window.scrollTo(0, 0);
   };
 
   const closeModal = () => {
@@ -67,11 +73,14 @@ function App() {
       .then((response) => response.json())
       .then((data) => {
         const slicedUsers = data.users.slice(0, 20);
-        setIsLoadingUsers(false);
         setUsers(slicedUsers);
       })
-      .catch((error) => console.error('Error fetching users:', error));
-    setIsLoadingUsers(false);
+      .catch((error) => {
+        console.error('Error fetching users:', error);
+      })
+      .finally(() => {
+        setIsLoadingUsers(false);
+      });
   }, []);
 
   const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
@@ -106,6 +115,9 @@ function App() {
         const updatedUsers = users.map((user) =>
           user.id === selectedUser.id ? { ...selectedUser } : user
         );
+        setActionSuccess('User updated successfully!');
+        setTimeout(() => setActionSuccess(''), 5000);
+
         setUsers(updatedUsers);
 
         setIsModalOpen(false);
@@ -127,6 +139,11 @@ function App() {
         </div>
       </header>
       <div className="bg-gray-100 p-8">
+        {actionSuccess && (
+          <div className="p-3 rounded-lg text-center my-2 bg-green-500 bg-opacity-40 text-black">
+            {actionSuccess}
+          </div>
+        )}
         <div className="mb-4 flex justify-between items-center">
           <button
             onClick={addUser}
@@ -148,6 +165,9 @@ function App() {
             <span className={headerStyle}>State</span>
           </div>
         </div>
+        {isLoadingUsers && (
+          <div className="text-center my-2">Loading users...</div>
+        )}
         <div className="grid grid-cols-1 gap-4">
           {users.map((user) => (
             <User
@@ -268,8 +288,9 @@ function App() {
                     <button
                       type="submit"
                       className="py-2 px-4 bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors"
+                      disabled={isUpdatingUser}
                     >
-                      Save Changes
+                      {isUpdatingUser ? 'Updating...' : 'Save Changes'}
                     </button>
                   </div>
                 </form>
