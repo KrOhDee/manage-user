@@ -37,7 +37,7 @@ function User({
 
   return (
     <div
-      className="bg-white shadow rounded-lg mb-2 sm:w-3/4 lg:w-full cursor-pointer hover:scale-105 transition-transform duration-300 sm:hover:scale-110 lg:hover:scale-105"
+      className="bg-white shadow rounded-lg mb-2 sm:w-3/4 lg:w-full cursor-pointer hover:scale-[1.02] transition-transform duration-200"
       onClick={() => onEdit(user)}
     >
       <div className="flex flex-col lg:flex-row">
