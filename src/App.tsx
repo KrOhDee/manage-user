@@ -13,12 +13,15 @@ export interface UserDetails {
   address: {
     state: string;
   };
+  image: string;
 }
 
 function App() {
   const [users, setUsers] = useState<UserDetails[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
   const headerStyle = 'font-bold text-gray-600 flex-1';
   const inputLabelStyle = 'block mb-2 font-semibold text-gray-600';
   const inputFieldStyle =
@@ -35,24 +38,88 @@ function App() {
     setIsModalOpen(true);
   };
 
+  const addUser = () => {
+    const newUser = {
+      id: Math.floor(Math.random() * 1000000),
+      firstName: 'New',
+      lastName: 'User',
+      email: 'newuser@example.com',
+      birthDate: '1990-01-01',
+      gender: 'Female',
+      address: { state: 'AZ' },
+      image: 'https://robohash.org/hicveldicta.png?size=50x50&set=set1',
+    };
+    setUsers((prevUsers) => [...prevUsers, newUser]);
+  };
+
+  const deleteUser = (userId: number) => {
+    setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+  };
+
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
   };
 
   useEffect(() => {
+    setIsLoadingUsers(true);
     fetch('https://dummyjson.com/users')
       .then((response) => response.json())
       .then((data) => {
         const slicedUsers = data.users.slice(0, 20);
+        setIsLoadingUsers(false);
         setUsers(slicedUsers);
       })
       .catch((error) => console.error('Error fetching users:', error));
+    setIsLoadingUsers(false);
   }, []);
+
+  const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsUpdatingUser(true);
+
+    setTimeout(() => {
+      if (selectedUser) {
+        if (
+          !selectedUser.firstName ||
+          !selectedUser.lastName ||
+          !selectedUser.email ||
+          !selectedUser.birthDate ||
+          !selectedUser.gender ||
+          !selectedUser.address.state ||
+          !selectedUser.image
+        ) {
+          alert('All fields must be filled out.');
+          setIsUpdatingUser(false);
+          return;
+        }
+
+        const birthDate = new Date(selectedUser.birthDate);
+        const minDate = new Date('01-01-1900');
+        const maxDate = new Date('12-31-2100');
+        if (birthDate < minDate || birthDate > maxDate) {
+          alert('Birth date must be between 01-01-1900 and 12-31-2100.');
+          setIsUpdatingUser(false);
+          return;
+        }
+
+        const updatedUsers = users.map((user) =>
+          user.id === selectedUser.id ? { ...selectedUser } : user
+        );
+        setUsers(updatedUsers);
+
+        setIsModalOpen(false);
+        setIsUpdatingUser(false);
+      } else {
+        alert('No user selected');
+        setIsUpdatingUser(false);
+      }
+    }, 1000);
+  };
 
   return (
     <>
-      <header className="bg-blue-600">
+      <header className="bg-blue-800">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-white">
             User Management Page
@@ -60,9 +127,20 @@ function App() {
         </div>
       </header>
       <div className="bg-gray-100 p-8">
+        <div className="mb-4 flex justify-between items-center">
+          <button
+            onClick={addUser}
+            className="py-2 px-4 bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors"
+          >
+            Add User
+          </button>
+        </div>
         <h2 className="lg:hidden text-2xl font-bold">Users</h2>
+        <h2 className="text-md text-gray-500">
+          *Click on a user to edit their information.
+        </h2>
         <div className="mb-4">
-          <div className="hidden lg:flex mb-4 px-2 py-5 bg-gray-200 rounded-t-lg text-center">
+          <div className="hidden lg:flex mb-4 px-16 py-5 bg-gray-200 rounded-t-lg text-center">
             <span className={headerStyle}>Name</span>
             <span className={headerStyle}>Email</span>
             <span className={headerStyle}>Date of Birth</span>
@@ -76,6 +154,7 @@ function App() {
               key={user.id}
               user={user as UserDetails}
               onEdit={handleEditUser}
+              onDelete={deleteUser}
             />
           ))}
           <Dialog
@@ -89,7 +168,7 @@ function App() {
                 <Dialog.Title className="text-3xl font-bold text-gray-800 mb-6">
                   Edit User Details
                 </Dialog.Title>
-                <form>
+                <form onSubmit={handleSaveChanges}>
                   <label className={inputLabelStyle}>
                     First Name:
                     <input
@@ -188,7 +267,7 @@ function App() {
                     </button>
                     <button
                       type="submit"
-                      className="py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                      className="py-2 px-4 bg-blue-700 text-white rounded hover:bg-blue-800 transition-colors"
                     >
                       Save Changes
                     </button>
