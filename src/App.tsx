@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import User from './components/User';
+import { Dialog } from '@headlessui/react';
 import './App.css';
 
-interface UserDetails {
+export interface UserDetails {
   id: number;
   firstName: string;
   lastName: string;
@@ -16,14 +17,39 @@ interface UserDetails {
 
 function App() {
   const [users, setUsers] = useState<UserDetails[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserDetails | null>(null);
   const headerStyle = 'font-bold text-gray-600 flex-1';
+  const inputLabelStyle = 'block mb-2 font-semibold text-gray-600';
+  const inputFieldStyle =
+    'block w-full px-3 py-2 border rounded border-gray-400 focus:border-blue-500 focus:outline-none';
+
+  const updateSelectedUser = (updates: Partial<UserDetails>) => {
+    setSelectedUser((current) => {
+      return { ...current, ...updates } as UserDetails;
+    });
+  };
+
+  const handleEditUser = (user: UserDetails) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
 
   useEffect(() => {
     fetch('https://dummyjson.com/users')
       .then((response) => response.json())
-      .then((data) => setUsers(data.users))
+      .then((data) => {
+        const slicedUsers = data.users.slice(0, 20);
+        setUsers(slicedUsers);
+      })
       .catch((error) => console.error('Error fetching users:', error));
   }, []);
+
   return (
     <>
       <header className="bg-blue-600">
@@ -34,6 +60,7 @@ function App() {
         </div>
       </header>
       <div className="bg-gray-100 p-8">
+        <h2 className="lg:hidden text-2xl font-bold">Users</h2>
         <div className="mb-4">
           <div className="hidden lg:flex mb-4 px-2 py-5 bg-gray-200 rounded-t-lg text-center">
             <span className={headerStyle}>Name</span>
@@ -45,8 +72,131 @@ function App() {
         </div>
         <div className="grid grid-cols-1 gap-4">
           {users.map((user) => (
-            <User key={user.id} user={user} />
+            <User
+              key={user.id}
+              user={user as UserDetails}
+              onEdit={handleEditUser}
+            />
           ))}
+          <Dialog
+            open={isModalOpen}
+            onClose={closeModal}
+            className="relative z-50"
+          >
+            <div className="fixed inset-0 bg-black opacity-50" />
+            <div className="fixed inset-0 p-4">
+              <Dialog.Panel className="bg-white rounded-lg shadow-xl p-10">
+                <Dialog.Title className="text-3xl font-bold text-gray-800 mb-6">
+                  Edit User Details
+                </Dialog.Title>
+                <form>
+                  <label className={inputLabelStyle}>
+                    First Name:
+                    <input
+                      type="text"
+                      className={inputFieldStyle}
+                      value={selectedUser?.firstName || ''}
+                      onChange={(e) =>
+                        updateSelectedUser({
+                          ...selectedUser,
+                          firstName: e.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label className={inputLabelStyle}>
+                    Last Name:
+                    <input
+                      type="text"
+                      className={inputFieldStyle}
+                      value={selectedUser?.lastName || ''}
+                      onChange={(e) =>
+                        updateSelectedUser({
+                          ...selectedUser,
+                          lastName: e.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label className={inputLabelStyle}>
+                    Email:
+                    <input
+                      type="text"
+                      className={inputFieldStyle}
+                      value={selectedUser?.email || ''}
+                      onChange={(e) =>
+                        updateSelectedUser({
+                          ...selectedUser,
+                          email: e.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label className={inputLabelStyle}>
+                    Date of Birth:
+                    <input
+                      type="text"
+                      className={inputFieldStyle}
+                      value={selectedUser?.birthDate || ''}
+                      onChange={(e) =>
+                        updateSelectedUser({
+                          ...selectedUser,
+                          birthDate: e.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label className={inputLabelStyle}>
+                    Gender:
+                    <input
+                      type="text"
+                      className={inputFieldStyle}
+                      value={selectedUser?.gender || ''}
+                      onChange={(e) =>
+                        updateSelectedUser({
+                          ...selectedUser,
+                          gender: e.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label className={inputLabelStyle}>
+                    State:
+                    <input
+                      type="text"
+                      className={inputFieldStyle}
+                      value={selectedUser?.address?.state || ''}
+                      onChange={(e) =>
+                        updateSelectedUser({
+                          ...selectedUser,
+                          address: {
+                            ...selectedUser?.address,
+                            state: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </label>
+
+                  <div className="mt-6 flex gap-3">
+                    <button
+                      type="button"
+                      className="py-2 px-4 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+                      onClick={closeModal}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </Dialog.Panel>
+            </div>
+          </Dialog>
         </div>
       </div>
     </>
