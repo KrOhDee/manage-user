@@ -14,6 +14,7 @@ export interface UserDetails {
     state: string;
   };
   image: string;
+  username?: string;
 }
 
 function App() {
@@ -28,6 +29,11 @@ function App() {
   const inputFieldStyle =
     'block w-full px-3 py-2 border rounded border-gray-400 focus:border-blue-500 focus:outline-none';
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
   const updateSelectedUser = (updates: Partial<UserDetails>) => {
     setSelectedUser((current) => {
       return { ...current, ...updates } as UserDetails;
@@ -39,7 +45,7 @@ function App() {
     setIsModalOpen(true);
   };
 
-  const addUser = () => {
+  const addUser = async () => {
     const newUser = {
       id: Math.floor(Math.random() * 1000000),
       firstName: 'New',
@@ -50,30 +56,150 @@ function App() {
       address: { state: 'AZ' },
       image: 'https://robohash.org/hicveldicta.png?size=50x50&set=set1',
     };
-    setActionSuccess('User added successfully!');
-    setTimeout(() => setActionSuccess(''), 5000);
-    setUsers((prevUsers) => [newUser, ...prevUsers]);
+
+    fetch('https://dummyjson.com/users/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newUser),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to add user');
+        }
+        return response.json();
+      })
+      .then((addedUserData) => {
+        console.log('Added user:', addedUserData);
+        setUsers((prevUsers) => [newUser, ...prevUsers]);
+        setActionSuccess('User added successfully!');
+        setTimeout(() => setActionSuccess(''), 5000);
+      })
+      .catch((error) => {
+        console.error('Error adding user:', error);
+        alert('Failed to add user');
+      });
   };
 
   const deleteUser = (userId: number) => {
-    setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-    setActionSuccess('User deleted successfully!');
-    setTimeout(() => setActionSuccess(''), 5000);
-    window.scrollTo(0, 0);
+    setIsUpdatingUser(true);
+
+    const userToDelete = users.find((user) => user.id === userId);
+
+    if (userToDelete && userToDelete.username) {
+      fetch(`https://dummyjson.com/users/${userId}`, {
+        method: 'DELETE',
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to delete user');
+          }
+          return response.json();
+        })
+        .then(() => {
+          console.log('Deleted user:', userToDelete);
+          setUsers(users.filter((user) => user.id !== userId));
+          setActionSuccess('User deleted successfully!');
+          setTimeout(() => setActionSuccess(''), 5000);
+        })
+        .catch((error) => {
+          console.error('Error deleting user:', error);
+          alert('Failed to delete user');
+        })
+        .finally(() => {
+          setIsUpdatingUser(false);
+        });
+    } else {
+      setUsers(users.filter((user) => user.id !== userId));
+      setActionSuccess('User deleted successfully!');
+      setTimeout(() => setActionSuccess(''), 5000);
+      setIsUpdatingUser(false);
+    }
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedUser(null);
+  const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsUpdatingUser(true);
+
+    if (selectedUser) {
+      if (
+        !selectedUser.firstName ||
+        !selectedUser.lastName ||
+        !selectedUser.email ||
+        !selectedUser.birthDate ||
+        !selectedUser.gender ||
+        !selectedUser.address.state ||
+        !selectedUser.image
+      ) {
+        alert('All fields must be filled out.');
+        setIsUpdatingUser(false);
+        return;
+      }
+
+      const birthDate = new Date(selectedUser.birthDate);
+      const minDate = new Date('01-01-1900');
+      const maxDate = new Date('12-31-2100');
+      if (birthDate < minDate || birthDate > maxDate) {
+        alert('Birth date must be between 01-01-1900 and 12-31-2100.');
+        setIsUpdatingUser(false);
+        return;
+      }
+
+      if (selectedUser.username) {
+        fetch(`https://dummyjson.com/users/${selectedUser.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(selectedUser),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Failed to update user');
+            }
+            return response.json();
+          })
+          .then((updatedUserData) => {
+            console.log('Updated user:', updatedUserData);
+
+            const updatedUsers = users.map((user) =>
+              user.id === selectedUser.id ? { ...selectedUser } : user
+            );
+            setUsers(updatedUsers);
+            setActionSuccess('User updated successfully!');
+            setTimeout(() => setActionSuccess(''), 5000);
+            setIsModalOpen(false);
+          })
+          .catch((error) => {
+            console.error('Error updating user:', error);
+            alert('Failed to update user');
+          })
+          .finally(() => {
+            setIsUpdatingUser(false);
+          });
+      } else {
+        const updatedUsers = users.map((user) =>
+          user.id === selectedUser.id ? { ...selectedUser } : user
+        );
+        setUsers(updatedUsers);
+        setActionSuccess('User updated successfully!');
+        setTimeout(() => setActionSuccess(''), 5000);
+        setIsModalOpen(false);
+        setIsUpdatingUser(false);
+      }
+    } else {
+      alert('No user selected');
+      setIsUpdatingUser(false);
+    }
   };
 
   useEffect(() => {
     setIsLoadingUsers(true);
-    fetch('https://dummyjson.com/users')
+    fetch('https://dummyjson.com/users?limit=20')
       .then((response) => response.json())
       .then((data) => {
-        const slicedUsers = data.users.slice(0, 20);
-        setUsers(slicedUsers);
+        setUsers(data.users);
       })
       .catch((error) => {
         console.error('Error fetching users:', error);
@@ -82,52 +208,6 @@ function App() {
         setIsLoadingUsers(false);
       });
   }, []);
-
-  const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsUpdatingUser(true);
-
-    setTimeout(() => {
-      if (selectedUser) {
-        if (
-          !selectedUser.firstName ||
-          !selectedUser.lastName ||
-          !selectedUser.email ||
-          !selectedUser.birthDate ||
-          !selectedUser.gender ||
-          !selectedUser.address.state ||
-          !selectedUser.image
-        ) {
-          alert('All fields must be filled out.');
-          setIsUpdatingUser(false);
-          return;
-        }
-
-        const birthDate = new Date(selectedUser.birthDate);
-        const minDate = new Date('01-01-1900');
-        const maxDate = new Date('12-31-2100');
-        if (birthDate < minDate || birthDate > maxDate) {
-          alert('Birth date must be between 01-01-1900 and 12-31-2100.');
-          setIsUpdatingUser(false);
-          return;
-        }
-
-        const updatedUsers = users.map((user) =>
-          user.id === selectedUser.id ? { ...selectedUser } : user
-        );
-        setActionSuccess('User updated successfully!');
-        setTimeout(() => setActionSuccess(''), 5000);
-
-        setUsers(updatedUsers);
-
-        setIsModalOpen(false);
-        setIsUpdatingUser(false);
-      } else {
-        alert('No user selected');
-        setIsUpdatingUser(false);
-      }
-    }, 1000);
-  };
 
   return (
     <>
