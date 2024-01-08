@@ -169,14 +169,14 @@ function App() {
             setUsers(updatedUsers);
             setActionSuccess('User updated successfully!');
             setTimeout(() => setActionSuccess(''), 5000);
-            setIsModalOpen(false);
+            setTimeout(() => {
+              setIsModalOpen(false);
+              setIsUpdatingUser(false);
+            }, 1000);
           })
           .catch((error) => {
             console.error('Error updating user:', error);
             alert('Failed to update user');
-          })
-          .finally(() => {
-            setIsUpdatingUser(false);
           });
       } else {
         const updatedUsers = users.map((user) =>
@@ -185,8 +185,10 @@ function App() {
         setUsers(updatedUsers);
         setActionSuccess('User updated successfully!');
         setTimeout(() => setActionSuccess(''), 5000);
-        setIsModalOpen(false);
-        setIsUpdatingUser(false);
+        setTimeout(() => {
+          setIsUpdatingUser(false);
+          setIsModalOpen(false);
+        }, 1000);
       }
     } else {
       alert('No user selected');
