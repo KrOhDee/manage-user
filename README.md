@@ -1,30 +1,86 @@
-# React + TypeScript + Vite
+# Manage User
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+manage-user is a React application designed to manage user data.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- User-friendly interface for managing user data.
+- Built with React, TypeScript, and Tailwind CSS.
 
-## Expanding the ESLint configuration
+## Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+Ensure you have installed the following:
 
-- Configure the top-level `parserOptions` property like this:
+- [Node.js](https://nodejs.org/) (version 18+. 20+.)
+- npm or yarn
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+## Installation
+
+To set up the project on your local machine:
+
+1. Clone the repository:
+
+```bash
+    git clone https://github.com/KrOhDee/manage-user.git
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+2. Navigate to project directory:
+
+```bash
+   cd manage-user
+```
+
+3. Install dependencies:
+
+With npm:
+
+```bash
+    npm install
+```
+
+With yarn:
+
+```bash
+    yarn
+```
+
+## Running the Application
+
+To run the application in development mode:
+
+1. Start development server:
+
+With npm:
+
+```bash
+    npm run dev
+```
+
+With yarn:
+
+```bash
+    yarn dev
+```
+
+2. View in browser:
+   Visit http://localhost:5173 to view the application in your browser.
+
+## Building for Production
+
+To build the application for production:
+
+1. Create production build:
+
+With npm:
+
+```bash
+   npm run build
+```
+
+With yarn:
+
+```bash
+   yarn build
+```
+
+This command will create a dist folder with all the files optimized for production.
